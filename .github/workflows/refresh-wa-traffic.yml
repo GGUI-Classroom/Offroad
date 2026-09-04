@@ -1,0 +1,36 @@
+name: Refresh Washington live traffic
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"
+  push:
+    branches: [ main ]
+    paths:
+      - "tools/fetch_wsdot_traffic.py"
+      - ".github/workflows/refresh-wa-traffic.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout app source
+        uses: actions/checkout@v4
+
+      - name: Fetch current WSDOT detector speeds
+        run: python3 tools/fetch_wsdot_traffic.py /tmp/wa-traffic.json
+
+      - name: Publish one-file traffic-data branch
+        shell: bash
+        run: |
+          git config user.name "offroader-traffic-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan offroader-traffic-tmp
+          git rm -rf .
+          cp /tmp/wa-traffic.json wa-traffic.json
+          git add wa-traffic.json
+          git commit -m "Refresh WSDOT live traffic"
+          git push --force origin HEAD:traffic-data
