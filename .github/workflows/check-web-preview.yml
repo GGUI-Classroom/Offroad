@@ -1,0 +1,27 @@
+name: Check Offroader web preview
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - "docs/offroader-v2.html"
+      - ".github/workflows/check-web-preview.yml"
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract and syntax-check inline JavaScript
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          html=Path('docs/offroader-v2.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',html,re.I|re.S)
+          if not scripts:
+              raise SystemExit('No inline JavaScript found')
+          Path('/tmp/offroader.js').write_text(scripts[-1],encoding='utf-8')
+          print('Extracted',len(scripts[-1]),'characters of inline JavaScript')
+          PY
+          node --check /tmp/offroader.js
