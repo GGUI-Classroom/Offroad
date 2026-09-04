@@ -1,0 +1,16 @@
+WORKS IN THIS PROTOTYPE
+- Nationwide U.S. street map
+- Android GPS position
+- U.S. destination search
+- U.S. routing
+- Optional traffic-aware route/ETA/incidents/closures with user Mapbox token
+- Seattle public traffic-camera locations
+- Florida 511 camera catalog locations
+- Camera provider architecture
+- Camera controls blocked while device reports driving speed
+
+NOT YET IMPLEMENTED
+- On-device YOLO/TFLite video inference in the Android build
+- Turn-by-turn voice guidance
+- Nationwide camera coverage (providers must be added state/city by state/city)
+- Full traffic-color road overlay
