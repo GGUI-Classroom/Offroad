@@ -1,0 +1,14 @@
+name: Probe SDOT stream
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - tools/probe_sdot_stream.py
+      - .github/workflows/probe-sdot-stream.yml
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/probe_sdot_stream.py
