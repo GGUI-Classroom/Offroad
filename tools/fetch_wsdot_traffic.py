@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import json, math, sys, urllib.request, xml.etree.ElementTree as ET
+import json, math, re, sys, urllib.request, xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
 LOC_URL = "https://www.wsdot.com/Traffic/WebServices/SWRegion/Service.asmx/GetRTDBLocationData"
@@ -19,6 +19,11 @@ def local(tag):
 def childmap(el):
     return {local(c.tag): (c.text or "").strip() for c in el}
 
+def norm(v):
+    # WSDOT's location and live RTDB feeds occasionally differ in spacing,
+    # punctuation and case. Normalize only for joining; preserve originals.
+    return re.sub(r"[^A-Z0-9]+", "", (v or "").upper())
+
 def to_float(v):
     try:
         f=float(v)
@@ -36,40 +41,66 @@ def main(out_path):
     loc_root = ET.fromstring(fetch(LOC_URL))
     data_root = ET.fromstring(fetch(DATA_URL))
 
+    # Index location records by both their RTDB name and alias. Do not rely on
+    # a particular wrapper element; the HTTP and SOAP representations differ.
     locations = {}
+    location_rows = 0
     for el in loc_root.iter():
-        if local(el.tag) != "RTDBLocation":
-            continue
         d = childmap(el)
-        name = d.get("name") or d.get("Name")
-        lat, lon = to_float(d.get("latitude")), to_float(d.get("longitude"))
-        if not name or lat is None or lon is None:
+        if "latitude" not in d or "longitude" not in d:
             continue
-        locations[name] = {
+        name = d.get("name") or d.get("Name") or ""
+        alias = d.get("alias") or d.get("Alias") or ""
+        lat, lon = to_float(d.get("latitude")), to_float(d.get("longitude"))
+        if lat is None or lon is None or (not name and not alias):
+            continue
+        row = {
             "lat": lat, "lon": lon,
             "roadway": d.get("roadwaydescription") or d.get("roadway") or "",
-            "location": d.get("location") or d.get("alias") or "",
+            "location": d.get("location") or alias or "",
             "side": d.get("sidedescription") or d.get("side") or "",
             "milepost": d.get("milepost") or "",
         }
+        location_rows += 1
+        for key in (name, alias):
+            nk = norm(key)
+            if nk:
+                locations.setdefault(nk, row)
 
+    live_rows = 0
+    matched_rows = 0
+    unmatched = []
     sensors = []
+    seen = set()
     for el in data_root.iter():
-        if local(el.tag) != "RTDBElementData":
-            continue
         d = childmap(el)
-        name = d.get("Name") or d.get("name")
-        if not name or name not in locations:
+        # Identify a live detector row by its fields instead of depending on
+        # one exact XML parent tag name.
+        if "Name" not in d or ("SpdTenths" not in d and "CalcSpdTenths" not in d):
             continue
+        live_rows += 1
+        name = d.get("Name") or ""
+        l = locations.get(norm(name))
+        if l is None:
+            if len(unmatched) < 8:
+                unmatched.append(name)
+            continue
+        matched_rows += 1
+
         speed_tenths = to_int(d.get("SpdTenths"))
         calc_tenths = to_int(d.get("CalcSpdTenths"))
-        raw = speed_tenths if speed_tenths and speed_tenths > 0 else calc_tenths
+        raw = speed_tenths if speed_tenths is not None and speed_tenths > 0 else calc_tenths
         if raw is None or raw <= 0:
             continue
         mph = raw / 10.0
-        if mph > 100:
+        if not (0 < mph <= 100):
             continue
-        l = locations[name]
+
+        # Avoid duplicates if WSDOT returns duplicate aggregate rows.
+        sig = (norm(name), round(l["lat"], 6), round(l["lon"], 6))
+        if sig in seen:
+            continue
+        seen.add(sig)
         sensors.append({
             "name": name,
             "lat": l["lat"], "lon": l["lon"],
@@ -79,6 +110,10 @@ def main(out_path):
             "volume": to_int(d.get("Volume")),
             "occupancy_tenths": to_int(d.get("OccTenths")),
         })
+
+    print(f"Parsed {location_rows} WSDOT location rows, {live_rows} live RTDB rows, {matched_rows} matched rows")
+    if unmatched:
+        print("First unmatched RTDB names:", " | ".join(unmatched))
 
     payload = {
         "source": "WSDOT Southwest Region RTDB 1-minute feed",
