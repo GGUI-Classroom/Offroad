@@ -1,0 +1,16 @@
+name: Probe WSDOT Northwest traffic XML
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "tools/probe_wsdot_nw.py"
+      - ".github/workflows/probe-wsdot-nw.yml"
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect Northwest XML schema once
+        run: python3 tools/probe_wsdot_nw.py
