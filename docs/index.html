@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Offroader Web Preview</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#eef1f4;color:#15202b}*{box-sizing:border-box}#map{position:absolute;inset:0}.top{position:absolute;z-index:1000;top:12px;left:12px;right:12px;display:flex;gap:8px;pointer-events:none}.searchbox{pointer-events:auto;background:white;border-radius:18px;padding:8px;box-shadow:0 3px 18px #0002;display:flex;gap:7px;flex:1;max-width:700px;margin:auto}.searchbox input{border:0;outline:0;flex:1;font-size:16px;min-width:0;padding:9px 10px}.btn{border:0;border-radius:12px;padding:10px 13px;background:#1769e0;color:white;font-weight:700}.btn.secondary{background:#edf2f7;color:#223}.btn:disabled{opacity:.45}.fabcol{position:absolute;z-index:1000;right:13px;top:84px;display:flex;flex-direction:column;gap:8px}.fab{width:46px;height:46px;border-radius:16px;border:0;background:#fff;box-shadow:0 3px 15px #0002;font-size:20px}.panel{position:absolute;z-index:1000;left:12px;right:12px;bottom:12px;background:#fff;border-radius:20px;box-shadow:0 6px 25px #0003;padding:14px;max-height:45%;overflow:auto;max-width:760px;margin:auto}.hidden{display:none}.row{display:flex;align-items:center;justify-content:space-between;gap:8px}.small{font-size:12px;color:#637083}.title{font-size:18px;font-weight:800}.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.chip{border:1px solid #dbe2ea;background:#f8fafc;border-radius:999px;padding:7px 10px;font-size:13px}.chip.on{background:#e7f0ff;border-color:#82aefa;color:#0e4ea5}.routeLine{margin-top:8px;padding-top:8px;border-top:1px solid #edf0f2}.camera-dot{width:13px;height:13px;border-radius:50%;background:#12a05c;border:2px solid white;box-shadow:0 1px 5px #0005}.camera-dot.snap{background:#386ad6}.warn{padding:9px 10px;background:#fff5d9;border-radius:12px;font-size:12px;margin-top:9px}.cameraPreview{margin-top:10px;border-radius:13px;background:#111;color:white;min-height:140px;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px}.legend{position:absolute;z-index:900;left:13px;top:85px;background:#fff;border-radius:13px;padding:8px 10px;box-shadow:0 2px 12px #0002;font-size:11px}.previewBadge{position:absolute;z-index:900;left:13px;top:126px;background:#17212b;color:#fff;border-radius:999px;padding:7px 10px;box-shadow:0 2px 12px #0002;font-size:11px;font-weight:700}.pulse{width:18px;height:18px;border-radius:50%;background:#1769e0;border:4px solid #fff;box-shadow:0 0 0 2px #1769e0aa}.leaflet-control-attribution{font-size:9px!important}@media(max-width:520px){.panel{max-height:50%;}.legend{display:none}.previewBadge{top:85px}.searchbox{border-radius:15px}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="top"><div class="searchbox"><input id="q" placeholder="Where to? (U.S.)" autocomplete="off"><button class="btn" id="go">Go</button></div></div>
+<div class="legend">🟢 Seattle public camera &nbsp; 🔵 Florida camera catalog</div>
+<div class="previewBadge">WEB PREVIEW</div>
+<div class="fabcol">
+<button class="fab" id="loc" title="My location">◎</button>
+<button class="fab" id="layers" title="Layers">☷</button>
+<button class="fab" id="about" title="About">i</button>
+</div>
+
+<div class="panel hidden" id="results"></div>
+<div class="panel hidden" id="routePanel"></div>
+<div class="panel hidden" id="layersPanel">
+  <div class="row"><div class="title">Map layers</div><button class="btn secondary" data-close>Close</button></div>
+  <div class="chips">
+    <button class="chip" id="cameraMode">Seattle cameras</button>
+    <button class="chip" id="flMode">Florida camera catalog</button>
+  </div>
+  <p class="small">This browser preview uses the same public camera-provider idea as the Android prototype. More city/state adapters can be added later.</p>
+</div>
+<div class="panel hidden" id="aboutPanel">
+  <div class="row"><div class="title">Offroader web preview</div><button class="btn secondary" data-close>Close</button></div>
+  <p class="small">This is not an Android emulator. It is a browser version of Offroader so you can test the map, U.S. destination search, routing, GPS, and camera layers without installing anything.</p>
+  <div class="warn">Live traffic and the on-device YOLO detector are not enabled in this web preview. Base routing uses the public OSRM demo service.</div>
+</div>
+<div class="panel hidden" id="cameraPanel"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map=L.map('map',{zoomControl:false}).setView([39.1,-96.6],4);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+L.control.zoom({position:'bottomright'}).addTo(map);
+let me=null,lastLoc=null,dest=null,routeLayer=null,cameraLayer=L.layerGroup(),flLayer=L.layerGroup(),camerasLoaded=false,flLoaded=false,destMarker=null;
+
+function hidePanels(){document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));}
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=hidePanels);
+document.getElementById('layers').onclick=()=>{hidePanels();document.getElementById('layersPanel').classList.remove('hidden');};
+document.getElementById('about').onclick=()=>{hidePanels();document.getElementById('aboutPanel').classList.remove('hidden');};
+document.getElementById('loc').onclick=()=>locate(true);
+
+document.getElementById('cameraMode').onclick=async(e)=>{if(map.hasLayer(cameraLayer)){map.removeLayer(cameraLayer);e.target.classList.remove('on');return;}e.target.classList.add('on');map.addLayer(cameraLayer);if(!camerasLoaded)await loadSeattle();};
+document.getElementById('flMode').onclick=async(e)=>{if(map.hasLayer(flLayer)){map.removeLayer(flLayer);e.target.classList.remove('on');return;}e.target.classList.add('on');map.addLayer(flLayer);if(!flLoaded)await loadFlorida();};
+
+function locate(recenter=false){
+  if(!navigator.geolocation){showMsg('Location is not supported by this browser.');return;}
+  navigator.geolocation.getCurrentPosition(p=>{
+    lastLoc={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy};
+    const ll=[lastLoc.lat,lastLoc.lon];
+    if(!me){me=L.marker(ll,{icon:L.divIcon({className:'',html:'<div class="pulse"></div>',iconSize:[18,18],iconAnchor:[9,9]})}).addTo(map);}else me.setLatLng(ll);
+    if(recenter)map.setView(ll,15);
+    if(dest)makeRoute();
+  },err=>showMsg('Location permission was denied or unavailable: '+err.message),{enableHighAccuracy:true,timeout:12000,maximumAge:30000});
+}
+
+async function search(){
+  const q=document.getElementById('q').value.trim();if(!q)return;
+  hidePanels();const p=document.getElementById('results');p.innerHTML='<b>Searching…</b>';p.classList.remove('hidden');
+  try{
+    const u='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&countrycodes=us&q='+encodeURIComponent(q);
+    const r=await fetch(u,{headers:{'Accept':'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);
+    const data=await r.json();if(!data.length){p.innerHTML='No U.S. results found.';return;}
+    p.innerHTML='<div class="title">Choose destination</div>'+data.map((x,i)=>`<button class="chip result" data-i="${i}" style="display:block;width:100%;text-align:left;margin-top:8px">${esc(x.display_name)}</button>`).join('');
+    p.querySelectorAll('.result').forEach(b=>b.onclick=()=>{const x=data[+b.dataset.i];dest={lat:+x.lat,lon:+x.lon,name:x.display_name};drawDestination();map.setView([dest.lat,dest.lon],14);hidePanels();if(lastLoc)makeRoute();else locate(false);});
+  }catch(e){p.innerHTML='<b>Search failed.</b><div class="small">'+esc(e.message)+'</div>';}
+}
+document.getElementById('go').onclick=search;
+document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')search();});
+
+function drawDestination(){
+  if(destMarker)map.removeLayer(destMarker);
+  destMarker=L.circleMarker([dest.lat,dest.lon],{radius:9,color:'#fff',weight:3,fillColor:'#e33',fillOpacity:1}).addTo(map).bindTooltip(dest.name);
+}
+
+async function makeRoute(){
+  if(!lastLoc||!dest)return;
+  hidePanels();const p=document.getElementById('routePanel');p.innerHTML='<b>Building route…</b>';p.classList.remove('hidden');
+  try{
+    const coords=`${lastLoc.lon},${lastLoc.lat};${dest.lon},${dest.lat}`;
+    const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?alternatives=true&steps=true&overview=full&geometries=geojson`);
+    if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(j.code!=='Ok'||!j.routes?.length)throw new Error(j.message||'No route');
+    const route=j.routes[0];if(routeLayer)map.removeLayer(routeLayer);
+    routeLayer=L.geoJSON(route.geometry,{style:{color:'#1769e0',weight:7,opacity:.88}}).addTo(map);map.fitBounds(routeLayer.getBounds(),{padding:[45,45]});
+    const mins=Math.max(1,Math.round(route.duration/60)),miles=(route.distance/1609.344).toFixed(1),steps=(route.legs?.[0]?.steps||[]).slice(0,6);
+    p.innerHTML=`<div class="row"><div><div class="title">${mins} min · ${miles} mi</div><div class="small">Base routing preview · no live traffic</div></div><button class="btn secondary" data-rclose>×</button></div><div class="routeLine">${steps.map(s=>`<div style="margin:7px 0">↳ ${esc(s.maneuver?.instruction||s.name||'Continue')} <span class="small">${fmtDist(s.distance)}</span></div>`).join('')}</div><div class="chips"><button class="chip" id="reroute">Recalculate</button><button class="chip" id="camsRoute">Show Seattle cameras</button></div>`;
+    p.querySelector('[data-rclose]').onclick=()=>p.classList.add('hidden');p.querySelector('#reroute').onclick=makeRoute;p.querySelector('#camsRoute').onclick=async()=>{if(!map.hasLayer(cameraLayer))map.addLayer(cameraLayer);document.getElementById('cameraMode').classList.add('on');if(!camerasLoaded)await loadSeattle();};
+  }catch(e){p.innerHTML='<b>Route failed.</b><div class="small">'+esc(e.message)+'</div>';}
+}
+
+function cameraIcon(kind){return L.divIcon({className:'',html:`<div class="camera-dot ${kind==='snap'?'snap':''}"></div>`,iconSize:[13,13],iconAnchor:[6,6]});}
+async function loadSeattle(){
+  camerasLoaded=true;
+  try{
+    const u='https://services.arcgis.com/ZOyb2t4B0UYuYNYH/arcgis/rest/services/Traffic_Cameras_CDL/FeatureServer/0/query?where=1%3D1&outFields=NAME%2CURL%2CLOCATION%2CSERVSTAT%2CSTREAM_NAME%2COWNERSHIP&outSR=4326&returnGeometry=true&f=geojson';
+    const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);const gj=await r.json();
+    for(const f of gj.features||[]){if(!f.geometry?.coordinates)continue;const [lon,lat]=f.geometry.coordinates,p=f.properties||{};L.marker([lat,lon],{icon:cameraIcon('live')}).addTo(cameraLayer).on('click',()=>openCamera({provider:'Seattle SDOT',name:p.LOCATION||p.NAME||'Traffic camera',url:p.URL||'',status:p.SERVSTAT||'',kind:'live'}));}
+  }catch(e){showMsg('Seattle camera layer failed to load: '+e.message);}
+}
+async function loadFlorida(){
+  flLoaded=true;
+  try{
+    const u='https://services.arcgis.com/3wFbqsFPLeKqOlIK/ArcGIS/rest/services/FL511_Traffic_Cameras/FeatureServer/0/query?where=1%3D1&outFields=ID%2CDESCRIPT%2CCOUNTY%2CHIGHWAY%2CDIRECTION%2CLATITUDE%2CLONGITUDE%2CIMAGE&outSR=4326&returnGeometry=true&f=geojson';
+    const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);const gj=await r.json();
+    for(const f of gj.features||[]){let p=f.properties||{},coords=f.geometry?.coordinates;if(!coords&&p.LONGITUDE&&p.LATITUDE)coords=[p.LONGITUDE,p.LATITUDE];if(!coords)continue;const [lon,lat]=coords;L.marker([lat,lon],{icon:cameraIcon('snap')}).addTo(flLayer).on('click',()=>openCamera({provider:'Florida 511 catalog',name:p.DESCRIPT||p.HIGHWAY||p.ID||'Traffic camera',url:(p.IMAGE&&/^https?:/i.test(p.IMAGE))?p.IMAGE:'',kind:'snap'}));}
+  }catch(e){showMsg('Florida camera layer failed to load: '+e.message);}
+}
+function openCamera(c){
+  hidePanels();const p=document.getElementById('cameraPanel');
+  p.innerHTML=`<div class="row"><div><div class="title">${esc(c.name)}</div><div class="small">${esc(c.provider)} ${c.status?'· '+esc(c.status):''}</div></div><button class="btn secondary" data-cclose>×</button></div><div class="cameraPreview">${c.kind==='live'?'Public camera selected. Open the official provider view when you want to inspect it.':'Public snapshot/catalog camera selected.'}</div><div class="chips"><button class="chip" id="openCam" ${!c.url?'disabled':''}>Open official camera</button><button class="chip" disabled>Vehicle AI — Android module only</button></div>${!c.url?'<div class="small" style="margin-top:8px">This catalog entry did not expose a direct public viewer URL.</div>':''}`;
+  p.classList.remove('hidden');p.querySelector('[data-cclose]').onclick=()=>p.classList.add('hidden');const open=p.querySelector('#openCam');if(c.url)open.onclick=()=>window.open(c.url,'_blank','noopener');
+}
+function showMsg(msg){hidePanels();const p=document.getElementById('results');p.innerHTML='<div class="title">Offroader</div><div class="small" style="margin-top:6px">'+esc(msg)+'</div>';p.classList.remove('hidden');}
+function fmtDist(m){return m<1000?Math.round(m)+' m':(m/1609.344).toFixed(1)+' mi'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+locate(false);
+</script>
+</body>
+</html>
