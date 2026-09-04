@@ -8,6 +8,7 @@ on:
     branches: [ main ]
     paths:
       - "tools/fetch_wsdot_traffic.py"
+      - "tools/fetch_sdot_cameras.py"
       - ".github/workflows/refresh-wa-traffic.yml"
 
 permissions:
@@ -24,6 +25,9 @@ jobs:
       - name: Fetch current WSDOT Northwest detector speeds
         run: python3 tools/fetch_wsdot_traffic.py /tmp/wa-traffic.json /tmp/nw-station-locations.json
 
+      - name: Fetch Seattle SDOT camera inventory
+        run: python3 tools/fetch_sdot_cameras.py /tmp/seattle-cameras.json
+
       - name: Publish traffic-data branch
         shell: bash
         run: |
@@ -33,6 +37,7 @@ jobs:
           git rm -rf .
           cp /tmp/wa-traffic.json wa-traffic.json
           cp /tmp/nw-station-locations.json nw-station-locations.json
-          git add wa-traffic.json nw-station-locations.json
-          git commit -m "Refresh WSDOT Northwest live traffic"
+          cp /tmp/seattle-cameras.json seattle-cameras.json
+          git add wa-traffic.json nw-station-locations.json seattle-cameras.json
+          git commit -m "Refresh Northwest traffic and Seattle cameras"
           git push --force origin HEAD:traffic-data
