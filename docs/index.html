@@ -6,124 +6,95 @@
 <title>Offroader Web Preview</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#eef1f4;color:#15202b}*{box-sizing:border-box}#map{position:absolute;inset:0}.top{position:absolute;z-index:1000;top:12px;left:12px;right:12px;display:flex;gap:8px;pointer-events:none}.searchbox{pointer-events:auto;background:white;border-radius:18px;padding:8px;box-shadow:0 3px 18px #0002;display:flex;gap:7px;flex:1;max-width:700px;margin:auto}.searchbox input{border:0;outline:0;flex:1;font-size:16px;min-width:0;padding:9px 10px}.btn{border:0;border-radius:12px;padding:10px 13px;background:#1769e0;color:white;font-weight:700}.btn.secondary{background:#edf2f7;color:#223}.btn:disabled{opacity:.45}.fabcol{position:absolute;z-index:1000;right:13px;top:84px;display:flex;flex-direction:column;gap:8px}.fab{width:46px;height:46px;border-radius:16px;border:0;background:#fff;box-shadow:0 3px 15px #0002;font-size:20px}.panel{position:absolute;z-index:1000;left:12px;right:12px;bottom:12px;background:#fff;border-radius:20px;box-shadow:0 6px 25px #0003;padding:14px;max-height:45%;overflow:auto;max-width:760px;margin:auto}.hidden{display:none}.row{display:flex;align-items:center;justify-content:space-between;gap:8px}.small{font-size:12px;color:#637083}.title{font-size:18px;font-weight:800}.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.chip{border:1px solid #dbe2ea;background:#f8fafc;border-radius:999px;padding:7px 10px;font-size:13px}.chip.on{background:#e7f0ff;border-color:#82aefa;color:#0e4ea5}.routeLine{margin-top:8px;padding-top:8px;border-top:1px solid #edf0f2}.camera-dot{width:13px;height:13px;border-radius:50%;background:#12a05c;border:2px solid white;box-shadow:0 1px 5px #0005}.camera-dot.snap{background:#386ad6}.warn{padding:9px 10px;background:#fff5d9;border-radius:12px;font-size:12px;margin-top:9px}.cameraPreview{margin-top:10px;border-radius:13px;background:#111;color:white;min-height:140px;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px}.legend{position:absolute;z-index:900;left:13px;top:85px;background:#fff;border-radius:13px;padding:8px 10px;box-shadow:0 2px 12px #0002;font-size:11px}.previewBadge{position:absolute;z-index:900;left:13px;top:126px;background:#17212b;color:#fff;border-radius:999px;padding:7px 10px;box-shadow:0 2px 12px #0002;font-size:11px;font-weight:700}.pulse{width:18px;height:18px;border-radius:50%;background:#1769e0;border:4px solid #fff;box-shadow:0 0 0 2px #1769e0aa}.leaflet-control-attribution{font-size:9px!important}@media(max-width:520px){.panel{max-height:50%;}.legend{display:none}.previewBadge{top:85px}.searchbox{border-radius:15px}}
+html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#eef1f4;color:#15202b}*{box-sizing:border-box}
+#map{position:absolute;inset:0}.top{position:absolute;z-index:1000;top:12px;left:12px;right:12px;display:flex;gap:8px;pointer-events:none}
+.searchbox{pointer-events:auto;background:white;border-radius:18px;padding:8px;box-shadow:0 3px 18px #0002;display:flex;gap:7px;flex:1;max-width:700px;margin:auto}
+.searchbox input{border:0;outline:0;flex:1;font-size:16px;min-width:0;padding:9px 10px}.btn{border:0;border-radius:12px;padding:10px 13px;background:#1769e0;color:white;font-weight:700}
+.btn.secondary{background:#edf2f7;color:#223}.btn:disabled,.chip:disabled{opacity:.45}.fabcol{position:absolute;z-index:1000;right:13px;top:84px;display:flex;flex-direction:column;gap:8px}
+.fab{width:46px;height:46px;border-radius:16px;border:0;background:#fff;box-shadow:0 3px 15px #0002;font-size:20px}.panel{position:absolute;z-index:1000;left:12px;right:12px;bottom:12px;background:#fff;border-radius:20px;box-shadow:0 6px 25px #0003;padding:14px;max-height:50%;overflow:auto;max-width:760px;margin:auto}
+.hidden{display:none}.row{display:flex;align-items:center;justify-content:space-between;gap:8px}.small{font-size:12px;color:#637083}.title{font-size:18px;font-weight:800}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.chip{border:1px solid #dbe2ea;background:#f8fafc;border-radius:999px;padding:8px 11px;font-size:13px}
+.chip.on{background:#e7f0ff;border-color:#82aefa;color:#0e4ea5}.routeLine{margin-top:8px;padding-top:8px;border-top:1px solid #edf0f2}
+.camera-dot{width:15px;height:15px;border-radius:5px;background:#11a560;border:2px solid white;box-shadow:0 1px 5px #0006}
+.traffic-dot{width:11px;height:11px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 5px #0005}
+.warn{padding:9px 10px;background:#fff5d9;border-radius:12px;font-size:12px;margin-top:9px}.ok{padding:9px 10px;background:#e9f8ef;border-radius:12px;font-size:12px;margin-top:9px}
+.cameraPreview{margin-top:10px;border-radius:13px;background:#111;color:white;min-height:170px;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden}
+.cameraPreview img{display:block;width:100%;height:auto;max-height:330px;object-fit:contain;background:#111}.legend{position:absolute;z-index:900;left:13px;top:85px;background:#fff;border-radius:13px;padding:8px 10px;box-shadow:0 2px 12px #0002;font-size:11px}
+.previewBadge{position:absolute;z-index:900;left:13px;top:126px;background:#17212b;color:#fff;border-radius:999px;padding:7px 10px;box-shadow:0 2px 12px #0002;font-size:11px;font-weight:700}
+.trafficStatus{position:absolute;z-index:900;left:13px;top:165px;background:#fff;border-radius:999px;padding:7px 10px;box-shadow:0 2px 12px #0002;font-size:11px;font-weight:700}
+.pulse{width:18px;height:18px;border-radius:50%;background:#1769e0;border:4px solid #fff;box-shadow:0 0 0 2px #1769e0aa}.leaflet-control-attribution{font-size:9px!important}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.stat{background:#f5f7fa;border-radius:11px;padding:8px}.stat b{display:block;font-size:15px}
+@media(max-width:520px){.panel{max-height:55%}.legend{display:none}.previewBadge{top:85px}.trafficStatus{top:124px}.searchbox{border-radius:15px}.statgrid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 <div id="map"></div>
 <div class="top"><div class="searchbox"><input id="q" placeholder="Where to? (U.S.)" autocomplete="off"><button class="btn" id="go">Go</button></div></div>
-<div class="legend">🟢 Seattle public camera &nbsp; 🔵 Florida camera catalog</div>
-<div class="previewBadge">WEB PREVIEW</div>
+<div class="legend">📹 Seattle SDOT cameras &nbsp; ● WA live traffic detectors</div>
+<div class="previewBadge">OFFROADER WEB</div>
+<div class="trafficStatus" id="trafficStatus">Traffic: loading…</div>
 <div class="fabcol">
 <button class="fab" id="loc" title="My location">◎</button>
+<button class="fab" id="cams" title="Seattle cameras">📹</button>
 <button class="fab" id="layers" title="Layers">☷</button>
 <button class="fab" id="about" title="About">i</button>
 </div>
-
 <div class="panel hidden" id="results"></div>
 <div class="panel hidden" id="routePanel"></div>
 <div class="panel hidden" id="layersPanel">
   <div class="row"><div class="title">Map layers</div><button class="btn secondary" data-close>Close</button></div>
-  <div class="chips">
-    <button class="chip" id="cameraMode">Seattle cameras</button>
-    <button class="chip" id="flMode">Florida camera catalog</button>
-  </div>
-  <p class="small">This browser preview uses the same public camera-provider idea as the Android prototype. More city/state adapters can be added later.</p>
+  <div class="chips"><button class="chip on" id="trafficMode">WA live traffic</button><button class="chip on" id="cameraMode">Seattle cameras</button><button class="chip" id="trafficDots">Traffic detectors</button></div>
+  <p class="small">Washington traffic uses WSDOT's public real-time detector feed. Outside Washington, Offroader currently falls back to normal routing until another state's traffic adapter is added.</p>
 </div>
 <div class="panel hidden" id="aboutPanel">
   <div class="row"><div class="title">Offroader web preview</div><button class="btn secondary" data-close>Close</button></div>
-  <p class="small">This is not an Android emulator. It is a browser version of Offroader so you can test the map, U.S. destination search, routing, GPS, and camera layers without installing anything.</p>
-  <div class="warn">Live traffic and the on-device YOLO detector are not enabled in this web preview. Base routing uses the public OSRM demo service.</div>
+  <p class="small">This is a browser twin of the Android prototype, not an Android emulator. In Washington, routes are scored against current WSDOT detector speeds. Seattle camera pins use SDOT's official camera inventory.</p>
+  <div class="ok">Traffic data is cached by the Offroader repository so the browser does not need a paid traffic API key.</div>
 </div>
 <div class="panel hidden" id="cameraPanel"></div>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const map=L.map('map',{zoomControl:false}).setView([39.1,-96.6],4);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
 L.control.zoom({position:'bottomright'}).addTo(map);
-let me=null,lastLoc=null,dest=null,routeLayer=null,cameraLayer=L.layerGroup(),flLayer=L.layerGroup(),camerasLoaded=false,flLoaded=false,destMarker=null;
-
-function hidePanels(){document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));}
+const TRAFFIC_URL='https://raw.githubusercontent.com/GGUI-Classroom/Offroad/traffic-data/wa-traffic.json';
+const SEATTLE_CAM_URL='https://services.arcgis.com/ZOyb2t4B0UYuYNYH/arcgis/rest/services/Traffic_Cameras_CDL/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&returnGeometry=true&f=json';
+let me=null,lastLoc=null,dest=null,destMarker=null,routeLayer=null,altLayers=[];
+let cameraLayer=L.layerGroup().addTo(map),trafficLayer=L.layerGroup(),camerasLoaded=false,cameraBounds=null;
+let trafficData=null,trafficEnabled=true,trafficDotsEnabled=false,camRefreshTimer=null;
+function hidePanels(){document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));stopCamRefresh();}
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=hidePanels);
 document.getElementById('layers').onclick=()=>{hidePanels();document.getElementById('layersPanel').classList.remove('hidden');};
 document.getElementById('about').onclick=()=>{hidePanels();document.getElementById('aboutPanel').classList.remove('hidden');};
 document.getElementById('loc').onclick=()=>locate(true);
-
-document.getElementById('cameraMode').onclick=async(e)=>{if(map.hasLayer(cameraLayer)){map.removeLayer(cameraLayer);e.target.classList.remove('on');return;}e.target.classList.add('on');map.addLayer(cameraLayer);if(!camerasLoaded)await loadSeattle();};
-document.getElementById('flMode').onclick=async(e)=>{if(map.hasLayer(flLayer)){map.removeLayer(flLayer);e.target.classList.remove('on');return;}e.target.classList.add('on');map.addLayer(flLayer);if(!flLoaded)await loadFlorida();};
-
-function locate(recenter=false){
-  if(!navigator.geolocation){showMsg('Location is not supported by this browser.');return;}
-  navigator.geolocation.getCurrentPosition(p=>{
-    lastLoc={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy};
-    const ll=[lastLoc.lat,lastLoc.lon];
-    if(!me){me=L.marker(ll,{icon:L.divIcon({className:'',html:'<div class="pulse"></div>',iconSize:[18,18],iconAnchor:[9,9]})}).addTo(map);}else me.setLatLng(ll);
-    if(recenter)map.setView(ll,15);
-    if(dest)makeRoute();
-  },err=>showMsg('Location permission was denied or unavailable: '+err.message),{enableHighAccuracy:true,timeout:12000,maximumAge:30000});
-}
-
-async function search(){
-  const q=document.getElementById('q').value.trim();if(!q)return;
-  hidePanels();const p=document.getElementById('results');p.innerHTML='<b>Searching…</b>';p.classList.remove('hidden');
-  try{
-    const u='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&countrycodes=us&q='+encodeURIComponent(q);
-    const r=await fetch(u,{headers:{'Accept':'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);
-    const data=await r.json();if(!data.length){p.innerHTML='No U.S. results found.';return;}
-    p.innerHTML='<div class="title">Choose destination</div>'+data.map((x,i)=>`<button class="chip result" data-i="${i}" style="display:block;width:100%;text-align:left;margin-top:8px">${esc(x.display_name)}</button>`).join('');
-    p.querySelectorAll('.result').forEach(b=>b.onclick=()=>{const x=data[+b.dataset.i];dest={lat:+x.lat,lon:+x.lon,name:x.display_name};drawDestination();map.setView([dest.lat,dest.lon],14);hidePanels();if(lastLoc)makeRoute();else locate(false);});
-  }catch(e){p.innerHTML='<b>Search failed.</b><div class="small">'+esc(e.message)+'</div>';}
-}
-document.getElementById('go').onclick=search;
-document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')search();});
-
-function drawDestination(){
-  if(destMarker)map.removeLayer(destMarker);
-  destMarker=L.circleMarker([dest.lat,dest.lon],{radius:9,color:'#fff',weight:3,fillColor:'#e33',fillOpacity:1}).addTo(map).bindTooltip(dest.name);
-}
-
-async function makeRoute(){
-  if(!lastLoc||!dest)return;
-  hidePanels();const p=document.getElementById('routePanel');p.innerHTML='<b>Building route…</b>';p.classList.remove('hidden');
-  try{
-    const coords=`${lastLoc.lon},${lastLoc.lat};${dest.lon},${dest.lat}`;
-    const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?alternatives=true&steps=true&overview=full&geometries=geojson`);
-    if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(j.code!=='Ok'||!j.routes?.length)throw new Error(j.message||'No route');
-    const route=j.routes[0];if(routeLayer)map.removeLayer(routeLayer);
-    routeLayer=L.geoJSON(route.geometry,{style:{color:'#1769e0',weight:7,opacity:.88}}).addTo(map);map.fitBounds(routeLayer.getBounds(),{padding:[45,45]});
-    const mins=Math.max(1,Math.round(route.duration/60)),miles=(route.distance/1609.344).toFixed(1),steps=(route.legs?.[0]?.steps||[]).slice(0,6);
-    p.innerHTML=`<div class="row"><div><div class="title">${mins} min · ${miles} mi</div><div class="small">Base routing preview · no live traffic</div></div><button class="btn secondary" data-rclose>×</button></div><div class="routeLine">${steps.map(s=>`<div style="margin:7px 0">↳ ${esc(s.maneuver?.instruction||s.name||'Continue')} <span class="small">${fmtDist(s.distance)}</span></div>`).join('')}</div><div class="chips"><button class="chip" id="reroute">Recalculate</button><button class="chip" id="camsRoute">Show Seattle cameras</button></div>`;
-    p.querySelector('[data-rclose]').onclick=()=>p.classList.add('hidden');p.querySelector('#reroute').onclick=makeRoute;p.querySelector('#camsRoute').onclick=async()=>{if(!map.hasLayer(cameraLayer))map.addLayer(cameraLayer);document.getElementById('cameraMode').classList.add('on');if(!camerasLoaded)await loadSeattle();};
-  }catch(e){p.innerHTML='<b>Route failed.</b><div class="small">'+esc(e.message)+'</div>';}
-}
-
-function cameraIcon(kind){return L.divIcon({className:'',html:`<div class="camera-dot ${kind==='snap'?'snap':''}"></div>`,iconSize:[13,13],iconAnchor:[6,6]});}
-async function loadSeattle(){
-  camerasLoaded=true;
-  try{
-    const u='https://services.arcgis.com/ZOyb2t4B0UYuYNYH/arcgis/rest/services/Traffic_Cameras_CDL/FeatureServer/0/query?where=1%3D1&outFields=NAME%2CURL%2CLOCATION%2CSERVSTAT%2CSTREAM_NAME%2COWNERSHIP&outSR=4326&returnGeometry=true&f=geojson';
-    const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);const gj=await r.json();
-    for(const f of gj.features||[]){if(!f.geometry?.coordinates)continue;const [lon,lat]=f.geometry.coordinates,p=f.properties||{};L.marker([lat,lon],{icon:cameraIcon('live')}).addTo(cameraLayer).on('click',()=>openCamera({provider:'Seattle SDOT',name:p.LOCATION||p.NAME||'Traffic camera',url:p.URL||'',status:p.SERVSTAT||'',kind:'live'}));}
-  }catch(e){showMsg('Seattle camera layer failed to load: '+e.message);}
-}
-async function loadFlorida(){
-  flLoaded=true;
-  try{
-    const u='https://services.arcgis.com/3wFbqsFPLeKqOlIK/ArcGIS/rest/services/FL511_Traffic_Cameras/FeatureServer/0/query?where=1%3D1&outFields=ID%2CDESCRIPT%2CCOUNTY%2CHIGHWAY%2CDIRECTION%2CLATITUDE%2CLONGITUDE%2CIMAGE&outSR=4326&returnGeometry=true&f=geojson';
-    const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);const gj=await r.json();
-    for(const f of gj.features||[]){let p=f.properties||{},coords=f.geometry?.coordinates;if(!coords&&p.LONGITUDE&&p.LATITUDE)coords=[p.LONGITUDE,p.LATITUDE];if(!coords)continue;const [lon,lat]=coords;L.marker([lat,lon],{icon:cameraIcon('snap')}).addTo(flLayer).on('click',()=>openCamera({provider:'Florida 511 catalog',name:p.DESCRIPT||p.HIGHWAY||p.ID||'Traffic camera',url:(p.IMAGE&&/^https?:/i.test(p.IMAGE))?p.IMAGE:'',kind:'snap'}));}
-  }catch(e){showMsg('Florida camera layer failed to load: '+e.message);}
-}
-function openCamera(c){
-  hidePanels();const p=document.getElementById('cameraPanel');
-  p.innerHTML=`<div class="row"><div><div class="title">${esc(c.name)}</div><div class="small">${esc(c.provider)} ${c.status?'· '+esc(c.status):''}</div></div><button class="btn secondary" data-cclose>×</button></div><div class="cameraPreview">${c.kind==='live'?'Public camera selected. Open the official provider view when you want to inspect it.':'Public snapshot/catalog camera selected.'}</div><div class="chips"><button class="chip" id="openCam" ${!c.url?'disabled':''}>Open official camera</button><button class="chip" disabled>Vehicle AI — Android module only</button></div>${!c.url?'<div class="small" style="margin-top:8px">This catalog entry did not expose a direct public viewer URL.</div>':''}`;
-  p.classList.remove('hidden');p.querySelector('[data-cclose]').onclick=()=>p.classList.add('hidden');const open=p.querySelector('#openCam');if(c.url)open.onclick=()=>window.open(c.url,'_blank','noopener');
-}
+document.getElementById('cams').onclick=async()=>{if(!camerasLoaded)await loadSeattle();if(cameraBounds)map.fitBounds(cameraBounds,{padding:[30,30]});};
+document.getElementById('trafficMode').onclick=e=>{trafficEnabled=!trafficEnabled;e.target.classList.toggle('on',trafficEnabled);if(dest&&lastLoc)makeRoute();};
+document.getElementById('cameraMode').onclick=async e=>{if(map.hasLayer(cameraLayer)){map.removeLayer(cameraLayer);e.target.classList.remove('on');return;}map.addLayer(cameraLayer);e.target.classList.add('on');if(!camerasLoaded)await loadSeattle();};
+document.getElementById('trafficDots').onclick=async e=>{trafficDotsEnabled=!trafficDotsEnabled;e.target.classList.toggle('on',trafficDotsEnabled);if(trafficDotsEnabled){if(!trafficData)await loadTraffic();drawTrafficDots();map.addLayer(trafficLayer);}else map.removeLayer(trafficLayer);};
+function locate(recenter=false){if(!navigator.geolocation){showMsg('Location is not supported by this browser.');return;}navigator.geolocation.getCurrentPosition(p=>{lastLoc={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy};const ll=[lastLoc.lat,lastLoc.lon];if(!me){me=L.marker(ll,{icon:L.divIcon({className:'',html:'<div class="pulse"></div>',iconSize:[18,18],iconAnchor:[9,9]})}).addTo(map);}else me.setLatLng(ll);if(recenter)map.setView(ll,15);if(dest)makeRoute();},err=>showMsg('Location permission was denied or unavailable: '+err.message),{enableHighAccuracy:true,timeout:12000,maximumAge:30000});}
+async function search(){const q=document.getElementById('q').value.trim();if(!q)return;hidePanels();const p=document.getElementById('results');p.innerHTML='<b>Searching…</b>';p.classList.remove('hidden');try{const u='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&countrycodes=us&q='+encodeURIComponent(q);const r=await fetch(u,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();if(!data.length){p.innerHTML='No U.S. results found.';return;}p.innerHTML='<div class="title">Choose destination</div>'+data.map((x,i)=>`<button class="chip result" data-i="${i}" style="display:block;width:100%;text-align:left;margin-top:8px">${esc(x.display_name)}</button>`).join('');p.querySelectorAll('.result').forEach(b=>b.onclick=()=>{const x=data[+b.dataset.i];dest={lat:+x.lat,lon:+x.lon,name:x.display_name};drawDestination();map.setView([dest.lat,dest.lon],14);hidePanels();if(lastLoc)makeRoute();else locate(false);});}catch(e){p.innerHTML='<b>Search failed.</b><div class="small">'+esc(e.message)+'</div>';}}
+document.getElementById('go').onclick=search;document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')search();});
+function drawDestination(){if(destMarker)map.removeLayer(destMarker);destMarker=L.circleMarker([dest.lat,dest.lon],{radius:9,color:'#fff',weight:3,fillColor:'#e33',fillOpacity:1}).addTo(map).bindTooltip(dest.name);}
+async function loadTraffic(){const s=document.getElementById('trafficStatus');try{const r=await fetch(TRAFFIC_URL+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(!Array.isArray(j.sensors)||!j.sensors.length)throw new Error('empty sensor feed');trafficData=j;const age=Math.max(0,Date.now()-Date.parse(j.updated_at||0));s.textContent='Traffic: '+j.sensors.length+' WA sensors · '+ageText(age);if(trafficDotsEnabled)drawTrafficDots();return j;}catch(e){s.textContent='Traffic: cache unavailable';console.warn('traffic',e);return null;}}
+function ageText(ms){const m=Math.round(ms/60000);if(!Number.isFinite(m))return 'unknown age';if(m<2)return 'just updated';if(m<60)return m+'m old';return Math.round(m/60)+'h old';}
+function drawTrafficDots(){trafficLayer.clearLayers();if(!trafficData?.sensors)return;for(const s of trafficData.sensors){if(!Number.isFinite(s.lat)||!Number.isFinite(s.lon)||!Number.isFinite(s.mph))continue;const c=s.mph>=50?'#17a65b':s.mph>=35?'#e5a800':s.mph>=20?'#e06b22':'#c92b37';const icon=L.divIcon({className:'',html:`<div class="traffic-dot" style="background:${c}"></div>`,iconSize:[11,11],iconAnchor:[5,5]});L.marker([s.lat,s.lon],{icon}).bindTooltip(`${esc(s.roadway||s.location||s.name)} · ${Math.round(s.mph)} mph`).addTo(trafficLayer);}}
+async function makeRoute(){if(!lastLoc||!dest)return;hidePanels();const p=document.getElementById('routePanel');p.innerHTML='<b>Building route + checking traffic…</b>';p.classList.remove('hidden');try{const coords=`${lastLoc.lon},${lastLoc.lat};${dest.lon},${dest.lat}`;const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?alternatives=3&steps=true&overview=full&geometries=geojson`);if(!r.ok)throw new Error('Routing HTTP '+r.status);const j=await r.json();if(j.code!=='Ok'||!j.routes?.length)throw new Error(j.message||'No route');let routes=j.routes.map((route,i)=>({route,i,traffic:scoreTraffic(route)}));let trafficUsed=false,chosen=routes[0];if(trafficEnabled&&trafficData){const covered=routes.filter(x=>x.traffic.sensorCount>=2);if(covered.length>=2){chosen=covered.reduce((a,b)=>a.traffic.adjustedSeconds<=b.traffic.adjustedSeconds?a:b);trafficUsed=true;}else if(routes[0].traffic.sensorCount>=2){chosen=routes[0];trafficUsed=true;}}drawRoutes(routes,chosen.i,trafficUsed);const route=chosen.route,t=chosen.traffic;const baseMins=Math.max(1,Math.round(route.duration/60));const etaMins=trafficUsed?Math.max(1,Math.round(t.adjustedSeconds/60)):baseMins;const miles=(route.distance/1609.344).toFixed(1),steps=(route.legs?.[0]?.steps||[]).slice(0,7);const trafficLabel=trafficUsed?`WSDOT live traffic · ${t.sensorCount} nearby detectors · ${t.avgMph?Math.round(t.avgMph)+' mph avg':'current speeds'}`:(insideWashington(route)?'Live traffic coverage was too sparse for this route':'Live traffic adapter not installed for this state yet');const delay=trafficUsed?Math.max(0,etaMins-baseMins):0;p.innerHTML=`<div class="row"><div><div class="title">${etaMins} min · ${miles} mi</div><div class="small">${esc(trafficLabel)}</div></div><button class="btn secondary" data-rclose>×</button></div><div class="statgrid"><div class="stat"><span class="small">Base</span><b>${baseMins} min</b></div><div class="stat"><span class="small">Traffic ETA</span><b>${trafficUsed?etaMins+' min':'—'}</b></div><div class="stat"><span class="small">Delay</span><b>${trafficUsed?delay+' min':'—'}</b></div></div>${trafficUsed?'<div class="ok">Route scoring is using current WSDOT detector speeds, not just normal OSRM travel time.</div>':'<div class="warn">'+esc(trafficLabel)+'. Offroader will not label the normal route as live-traffic-aware.</div>'}<div class="routeLine">${steps.map(s=>`<div style="margin:7px 0">↳ ${esc(s.maneuver?.instruction||s.name||'Continue')} <span class="small">${fmtDist(s.distance)}</span></div>`).join('')}</div><div class="chips"><button class="chip" id="reroute">Recalculate</button><button class="chip" id="showDet">Show traffic detectors</button><button class="chip" id="showCams">Seattle cameras</button></div>`;p.querySelector('[data-rclose]').onclick=()=>p.classList.add('hidden');p.querySelector('#reroute').onclick=async()=>{await loadTraffic();makeRoute();};p.querySelector('#showDet').onclick=()=>{trafficDotsEnabled=true;document.getElementById('trafficDots').classList.add('on');drawTrafficDots();map.addLayer(trafficLayer);};p.querySelector('#showCams').onclick=async()=>{if(!camerasLoaded)await loadSeattle();if(!map.hasLayer(cameraLayer))map.addLayer(cameraLayer);document.getElementById('cameraMode').classList.add('on');};}catch(e){p.innerHTML='<b>Route failed.</b><div class="small">'+esc(e.message)+'</div>';}}
+function drawRoutes(routes,chosenIndex,trafficUsed){for(const l of altLayers)map.removeLayer(l);altLayers=[];if(routeLayer)map.removeLayer(routeLayer);for(const x of routes){if(x.i===chosenIndex)continue;const l=L.geoJSON(x.route.geometry,{style:{color:'#7f8a96',weight:5,opacity:.38}}).addTo(map);altLayers.push(l);}const chosen=routes.find(x=>x.i===chosenIndex);let color='#1769e0';if(trafficUsed){const f=chosen.traffic.factor;color=f<1.12?'#15965d':f<1.35?'#d89d00':f<1.65?'#df6c25':'#c62f3b';}routeLayer=L.geoJSON(chosen.route.geometry,{style:{color,weight:7,opacity:.9}}).addTo(map);map.fitBounds(routeLayer.getBounds(),{padding:[45,45]});}
+function scoreTraffic(route){if(!trafficEnabled||!trafficData?.sensors?.length)return {factor:1,adjustedSeconds:route.duration,sensorCount:0,avgMph:null};const coords=route.geometry?.coordinates||[];if(!coords.length)return {factor:1,adjustedSeconds:route.duration,sensorCount:0,avgMph:null};const step=Math.max(1,Math.floor(coords.length/180)),sample=[];for(let i=0;i<coords.length;i+=step)sample.push(coords[i]);const near=[];for(const s of trafficData.sensors){if(!Number.isFinite(s.lat)||!Number.isFinite(s.lon)||!Number.isFinite(s.mph)||s.mph<=0)continue;let best=Infinity;for(const c of sample){const d=fastMeters(s.lat,s.lon,c[1],c[0]);if(d<best)best=d;if(best<250)break;}if(best<=900)near.push({s,d:best});}if(!near.length)return {factor:1,adjustedSeconds:route.duration,sensorCount:0,avgMph:null};let wsum=0,fsum=0,ssum=0;for(const n of near){const w=Math.max(.25,1-n.d/1200);const f=speedFactor(n.s.mph);wsum+=w;fsum+=w*f;ssum+=w*n.s.mph;}const factor=Math.max(1,fsum/wsum),avgMph=ssum/wsum;return {factor,adjustedSeconds:route.duration*factor,sensorCount:near.length,avgMph};}
+function speedFactor(mph){if(mph>=55)return 1;if(mph>=45)return 1.08;if(mph>=35)return 1.18;if(mph>=25)return 1.35;if(mph>=15)return 1.65;return 2.1;}
+function fastMeters(a,b,c,d){const y=(a+c)*Math.PI/360,x=(d-b)*Math.cos(y),z=c-a;return 111320*Math.sqrt(x*x+z*z);}
+function insideWashington(route){const c=route.geometry?.coordinates||[];if(!c.length)return false;const mid=c[Math.floor(c.length/2)];return mid[0]>-125&&mid[0]<-116.8&&mid[1]>45.4&&mid[1]<49.1;}
+function cameraIcon(){return L.divIcon({className:'',html:'<div class="camera-dot"></div>',iconSize:[15,15],iconAnchor:[7,7]});}
+async function loadSeattle(){camerasLoaded=true;const camBtn=document.getElementById('cameraMode');camBtn.textContent='Seattle cameras (loading…)';try{const r=await fetch(SEATTLE_CAM_URL,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(j.error)throw new Error(j.error.message||'ArcGIS error');const pts=[];for(const f of j.features||[]){const g=f.geometry,a=f.attributes||{};if(!g||!Number.isFinite(g.x)||!Number.isFinite(g.y))continue;const lat=+g.y,lon=+g.x;pts.push([lat,lon]);L.marker([lat,lon],{icon:cameraIcon()}).addTo(cameraLayer).on('click',()=>openCamera({provider:'Seattle SDOT',name:a.LOCATION||a.NAME||'Traffic camera',url:a.URL||'',status:a.SERVSTAT||'',stream:a.STREAM_NAME||'',lat,lon}));}if(pts.length)cameraBounds=L.latLngBounds(pts);camBtn.textContent='Seattle cameras ('+pts.length+')';document.getElementById('cams').title='Seattle cameras ('+pts.length+')';}catch(e){camerasLoaded=false;camBtn.textContent='Seattle cameras (failed)';showMsg('Seattle camera layer failed to load: '+e.message);}}
+function openCamera(c){hidePanels();const p=document.getElementById('cameraPanel');const imageUrl=normaliseCamUrl(c.url);p.innerHTML=`<div class="row"><div><div class="title">${esc(c.name)}</div><div class="small">${esc(c.provider)} ${c.status?'· '+esc(c.status):''}</div></div><button class="btn secondary" data-cclose>×</button></div><div class="cameraPreview" id="cameraPreview">${imageUrl?`<img id="camImg" alt="Current SDOT traffic camera image" src="${escAttr(cacheBust(imageUrl))}">`:'No inline camera image URL was published for this camera.'}</div><div class="chips">${imageUrl?'<button class="chip" id="refreshCam">Refresh image</button>':''}<button class="chip" id="officialCam">Open SDOT live video map</button></div><div class="small" style="margin-top:8px">${c.stream?'Stream: '+esc(c.stream)+' · ':''}The inline view refreshes the official SDOT camera image. SDOT's Traveler map is the official live-video viewer.</div>`;p.classList.remove('hidden');p.querySelector('[data-cclose]').onclick=()=>{p.classList.add('hidden');stopCamRefresh();};p.querySelector('#officialCam').onclick=()=>window.open('https://web.seattle.gov/travelers/','_blank','noopener');if(imageUrl){const img=p.querySelector('#camImg'),refresh=()=>{img.src=cacheBust(imageUrl);};p.querySelector('#refreshCam').onclick=refresh;camRefreshTimer=setInterval(refresh,5000);img.onerror=()=>{document.getElementById('cameraPreview').innerHTML='<div>SDOT image could not be embedded here.<br><span class="small">Use “Open SDOT live video map” for this camera network.</span></div>';stopCamRefresh();};}}
+function stopCamRefresh(){if(camRefreshTimer){clearInterval(camRefreshTimer);camRefreshTimer=null;}}
+function normaliseCamUrl(u){if(!u||!/^https?:/i.test(u))return '';return u.replace(/^http:/i,'https:');}
+function cacheBust(u){return u+(u.includes('?')?'&':'?')+'_offroader='+Date.now();}
 function showMsg(msg){hidePanels();const p=document.getElementById('results');p.innerHTML='<div class="title">Offroader</div><div class="small" style="margin-top:6px">'+esc(msg)+'</div>';p.classList.remove('hidden');}
 function fmtDist(m){return m<1000?Math.round(m)+' m':(m/1609.344).toFixed(1)+' mi'}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
-locate(false);
+function escAttr(s){return esc(s);}
+loadTraffic();loadSeattle();setInterval(loadTraffic,5*60*1000);
 </script>
 </body>
 </html>
