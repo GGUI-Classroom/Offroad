@@ -1,0 +1,57 @@
+name: Probe all TripCheck scripts for live camera endpoint
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/probe-tripcheck-all-scripts.yml'
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect all page scripts
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import re, urllib.request, urllib.parse
+          pages=['https://tripcheck.com/','https://tripcheck.com/DynamicReports/Report/Cameras/1']
+          UA='Mozilla/5.0 Offroader probe'
+          def get(url):
+            req=urllib.request.Request(url,headers={'User-Agent':UA})
+            with urllib.request.urlopen(req,timeout=45) as r:
+              return r.read().decode('utf-8','replace'), r.geturl()
+          pats=['trafficland','livestream','live stream','streaming','streamurl','stream_url','video_feed','videofeed','pubtoken','camsldi','camera stream','restart streaming']
+          seen_urls=set()
+          for page in pages:
+            print('\n######## PAGE',page)
+            try: html,final=get(page)
+            except Exception as e: print('PAGE_FAIL',e); continue
+            # inline scripts too
+            inline=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',html,re.I|re.S)
+            for idx,text in enumerate(inline):
+              low=text.lower()
+              if any(p in low for p in pats):
+                print('\nINLINE',idx,'LEN',len(text))
+                for p in pats:
+                  for m in list(re.finditer(re.escape(p),low))[:10]:
+                    print('PAT',p,text[max(0,m.start()-900):min(len(text),m.end()+1800)].replace('\n',' ')[:2800])
+            scripts=re.findall(r'<script[^>]+src=["\']([^"\']+)',html,re.I)
+            print('SCRIPT_COUNT',len(scripts))
+            for raw in scripts:
+              url=urllib.parse.urljoin(final,raw if not raw.startswith('//') else 'https:'+raw)
+              if url in seen_urls: continue
+              seen_urls.add(url)
+              try:text,_=get(url)
+              except Exception as e: print('SCRIPT_FAIL',url,repr(e));continue
+              low=text.lower()
+              hits=[p for p in pats if p in low]
+              if not hits: continue
+              print('\n=== SCRIPT',url,'LEN',len(text),'HITS',hits,'===')
+              printed=0
+              for p in hits:
+                for m in re.finditer(re.escape(p),low):
+                  print('\nPAT',p,'\n',text[max(0,m.start()-1200):min(len(text),m.end()+2500)].replace('\n',' ')[:3800])
+                  printed+=1
+                  if printed>=25: break
+                if printed>=25: break
+          PY
