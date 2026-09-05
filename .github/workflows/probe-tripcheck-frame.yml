@@ -1,0 +1,16 @@
+name: Probe TripCheck iframe support
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/probe-tripcheck-frame.yml'
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show frame-related headers
+        run: |
+          curl -sSI -L 'https://tripcheck.com/DynamicReports/Report/Cameras/1' | grep -Ei '^(HTTP|x-frame-options|content-security-policy|frame-ancestors|access-control)' || true
+          echo '--- TrafficLand ---'
+          curl -sSI -L 'https://www.trafficland.com/' | grep -Ei '^(HTTP|x-frame-options|content-security-policy|frame-ancestors|access-control)' || true
