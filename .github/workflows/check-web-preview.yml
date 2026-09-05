@@ -4,24 +4,28 @@ on:
   push:
     branches: [ main ]
     paths:
-      - "docs/offroader-v2.html"
+      - "docs/offroader-v3.html"
+      - "docs/offroader-v4.html"
+      - "docs/oregon-layers.js"
+      - "docs/index.html"
       - ".github/workflows/check-web-preview.yml"
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Extract and syntax-check inline JavaScript
+      - name: Syntax-check Oregon layer JavaScript
+        run: node --check docs/oregon-layers.js
+      - name: Syntax-check v4 wrapper JavaScript
         shell: bash
         run: |
           python3 - <<'PY'
           import re
           from pathlib import Path
-          html=Path('docs/offroader-v2.html').read_text(encoding='utf-8')
+          html=Path('docs/offroader-v4.html').read_text(encoding='utf-8')
           scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',html,re.I|re.S)
           if not scripts:
-              raise SystemExit('No inline JavaScript found')
-          Path('/tmp/offroader.js').write_text(scripts[-1],encoding='utf-8')
-          print('Extracted',len(scripts[-1]),'characters of inline JavaScript')
+              raise SystemExit('No inline JavaScript found in v4 wrapper')
+          Path('/tmp/offroader-v4.js').write_text('\n'.join(scripts),encoding='utf-8')
           PY
-          node --check /tmp/offroader.js
+          node --check /tmp/offroader-v4.js
