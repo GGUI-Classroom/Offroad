@@ -5,10 +5,10 @@ on:
     branches: [ main ]
     paths:
       - "docs/offroader-v3.html"
-      - "docs/offroader-v4.html"
-      - "docs/offroader-v5.html"
+      - "docs/offroader-v6.html"
       - "docs/oregon-layers.js"
-      - "docs/valhalla-routing.js"
+      - "docs/no-key-routing.js"
+      - "docs/portland-live.js"
       - "docs/index.html"
       - ".github/workflows/check-web-preview.yml"
 jobs:
@@ -18,18 +18,20 @@ jobs:
       - uses: actions/checkout@v4
       - name: Syntax-check Oregon layer JavaScript
         run: node --check docs/oregon-layers.js
-      - name: Syntax-check Valhalla routing JavaScript
-        run: node --check docs/valhalla-routing.js
-      - name: Syntax-check v5 wrapper JavaScript
+      - name: Syntax-check no-key routing JavaScript
+        run: node --check docs/no-key-routing.js
+      - name: Syntax-check Portland live layer JavaScript
+        run: node --check docs/portland-live.js
+      - name: Syntax-check v6 wrapper JavaScript
         shell: bash
         run: |
           python3 - <<'PY'
           import re
           from pathlib import Path
-          html=Path('docs/offroader-v5.html').read_text(encoding='utf-8')
+          html=Path('docs/offroader-v6.html').read_text(encoding='utf-8')
           scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',html,re.I|re.S)
           if not scripts:
-              raise SystemExit('No inline JavaScript found in v5 wrapper')
-          Path('/tmp/offroader-v5.js').write_text('\n'.join(scripts),encoding='utf-8')
+              raise SystemExit('No inline JavaScript found in v6 wrapper')
+          Path('/tmp/offroader-v6.js').write_text('\n'.join(scripts),encoding='utf-8')
           PY
-          node --check /tmp/offroader-v5.js
+          node --check /tmp/offroader-v6.js
