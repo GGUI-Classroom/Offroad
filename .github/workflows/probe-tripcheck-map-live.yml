@@ -1,0 +1,46 @@
+name: Probe TripCheck map live-stream endpoint
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/probe-tripcheck-map-live.yml'
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect TripCheck main-map scripts for live camera calls
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import re, urllib.request, urllib.parse
+          base='https://tripcheck.com/'
+          def get(url):
+            req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 Offroader probe'})
+            with urllib.request.urlopen(req,timeout=45) as r:return r.read().decode('utf-8','replace')
+          html=get(base)
+          scripts=re.findall(r'<script[^>]+src=["\']([^"\']+)',html,re.I)
+          print('SCRIPT_COUNT',len(scripts))
+          targets=[('PAGE',html)]
+          for raw in scripts:
+            s=raw
+            if s.startswith('//'):s='https:'+s
+            elif s.startswith('/'):s='https://tripcheck.com'+s
+            elif not s.startswith('http'):s=urllib.parse.urljoin(base,s)
+            if 'tripcheck.com' not in s:continue
+            try:targets.append((s,get(s)))
+            except Exception as e:print('FAIL',s,repr(e))
+          pats=['trafficland','live streaming','livestream','streaming','streamurl','stream_url','video feed','pubtoken','cameraimage','camera image']
+          for name,text in targets:
+            low=text.lower(); matches=[]
+            for pat in pats:
+              for m in re.finditer(re.escape(pat),low):matches.append((m.start(),pat))
+            if not matches:continue
+            print('\n===',name,'LEN',len(text),'MATCHES',len(matches),'===')
+            seen=[]
+            for pos,pat in sorted(matches)[:80]:
+              block=text[max(0,pos-700):min(len(text),pos+1700)].replace('\n',' ')
+              if block in seen:continue
+              seen.append(block)
+              print('\nPAT',pat,'\n',block[:2400])
+          PY
