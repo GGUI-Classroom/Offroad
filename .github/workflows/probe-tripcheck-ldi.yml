@@ -1,0 +1,31 @@
+name: Probe TripCheck LDI live images
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/probe-tripcheck-ldi.yml'
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compare normal and LDI camera frames
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,time,urllib.request
+          urls={
+            'normal':'https://tripcheck.com/roadcams/cams/i205arprt_pid533.jpg',
+            'ldi':'https://tripcheck.com/roadcams/cams/camsLDI/i205arprt_pid533.jpg'
+          }
+          for round in range(4):
+            print('ROUND',round)
+            for label,url in urls.items():
+              try:
+                req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 Offroader probe','Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=30) as r:
+                  b=r.read()
+                  print(label,'status',r.status,'len',len(b),'sha',hashlib.sha256(b).hexdigest()[:20],'lastmod',r.headers.get('Last-Modified'),'ctype',r.headers.get('Content-Type'))
+              except Exception as e: print(label,'ERROR',repr(e))
+            time.sleep(2.2)
+          PY
