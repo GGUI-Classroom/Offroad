@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Offroader v5</title>
+<style>html,body,#app{width:100%;height:100%;margin:0;border:0;display:block;background:#e9edf2}</style>
+</head>
+<body>
+<iframe id="app" src="offroader-v3.html" title="Offroader"></iframe>
+<script>
+const frame=document.getElementById('app');
+frame.addEventListener('load',()=>{
+  try{
+    const d=frame.contentDocument;
+    if(!d)return;
+    const load=(id,src)=>new Promise((resolve,reject)=>{
+      if(d.getElementById(id)){resolve();return;}
+      const s=d.createElement('script');s.id=id;s.src=src;s.onload=resolve;s.onerror=reject;d.body.appendChild(s);
+    });
+    load('valhallaRoutingScript','valhalla-routing.js?v=5')
+      .then(()=>load('oregonLayerScript','oregon-layers.js?v=5'))
+      .catch(e=>console.error('Offroader v5 extension failed to load',e));
+  }catch(e){console.error(e);}
+});
+</script>
+</body>
+</html>
