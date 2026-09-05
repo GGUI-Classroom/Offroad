@@ -1,0 +1,41 @@
+name: Probe Oregon TripCheck video fields
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/probe-oregon-video.yml'
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect Portland camera fields
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, urllib.parse, urllib.request
+          base='https://gis.odot.state.or.us/arcgis1006/rest/services/trip_check/Trip_Check_Terrain/MapServer/1/query'
+          params={
+            'where': "latitude > 45.35 AND latitude < 45.70 AND longitude > -122.90 AND longitude < -122.35",
+            'outFields':'OBJECTID,device_id,device_name,organization_name,cctv_image,cctv_url,cctv_other,route_designator,latitude,longitude',
+            'returnGeometry':'false','resultRecordCount':'1000','f':'json'
+          }
+          url=base+'?'+urllib.parse.urlencode(params)
+          req=urllib.request.Request(url,headers={'User-Agent':'Offroader camera probe'})
+          with urllib.request.urlopen(req,timeout=60) as r:
+            data=json.load(r)
+          feats=data.get('features',[])
+          print('COUNT',len(feats))
+          interesting=[]
+          for f in feats:
+            a=f.get('attributes',{})
+            vals=' '.join(str(a.get(k) or '') for k in ('cctv_image','cctv_url','cctv_other')).lower()
+            if any(x in vals for x in ('trafficland','stream','video','live')):
+              interesting.append(a)
+          print('INTERESTING_COUNT',len(interesting))
+          for a in interesting[:40]:
+            print(json.dumps(a,ensure_ascii=False))
+          print('SAMPLE_FIRST_20')
+          for f in feats[:20]:
+            print(json.dumps(f.get('attributes',{}),ensure_ascii=False))
+          PY
